@@ -1,5 +1,8 @@
-﻿namespace RaRaft
+﻿using System;
+
+namespace RaRaft
 {
+    [Serializable]
     public class AppendRequest<T>
     {
         public int Term { get; set; }
@@ -13,12 +16,14 @@
         public int LeaderCommitIndex { get; set; }
     }
 
+    [Serializable]
     public class AppendResponse
     {
         public int Term { get; set; }
         public bool Success { get; set; }
     }
 
+    [Serializable]
     public class RequestVoteRequest
     {
         public int Term { get; set; }
@@ -27,6 +32,7 @@
         public int LastLogTerm { get; set; }
     }
 
+    [Serializable]
     public class RequestVoteResponse
     {
         public int Term { get; set; }
