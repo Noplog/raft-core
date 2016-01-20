@@ -7,6 +7,7 @@ using System.Threading;
 namespace RaRaft
 {
     // Lets do some serious perf testing before we optimise this
+    // TODO: Does this need to be thread safe, the caller is thread safe
     // TODO: Add a memory cache?
     // TODO: Add bookmarks for term/index positions in the file?
     // TODO: Compaction?

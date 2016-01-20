@@ -101,6 +101,7 @@ You can then start writing data to `node.Write(myMessage)` on the leading node, 
 * The locking code is horrible. Should it be implemented in Akka (or similar) and the locks removed?
 * Real implementations are required (like protobuf, HTTP etc...)
 * Make parts of it more extendable (i.e. interfaces for the logs)
+* Various improvements to the log (documented as todos in the `MonotonicLog.cs` file)
 * Tests
 * Logging
 * Perf
