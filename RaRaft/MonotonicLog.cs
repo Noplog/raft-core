@@ -58,7 +58,7 @@ namespace RaRaft
         /// Add an entry to the log. Note that the index for the entry is controlled by the caller
         /// </summary>
         /// <param name="entries"></param>
-        public void Append(params LogEntry<T>[] entries)
+        public int Append(params LogEntry<T>[] entries)
         {
             var buffer = entries.GetBuffer();
             
@@ -68,6 +68,7 @@ namespace RaRaft
                 logStream.Position = logStream.Length;
                 logStream.Write(buffer, 0, buffer.Length);
                 logStream.Flush();
+                return entries.Select(x => x.Index).Max();
             }
             finally
             {

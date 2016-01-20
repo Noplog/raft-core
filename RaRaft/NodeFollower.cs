@@ -7,13 +7,13 @@ namespace RaRaft
     public partial class Node<T>
     {
         Timer electionTimeoutTimer;
-        object requestVoteSync = new object();
+        object followerSync = new object();
         public string VotedFor { get; private set; }
         public string CurrentLeader { get; private set; }
 
         public RequestVoteResponse RequestVote(RequestVoteRequest request)
         {
-            lock(requestVoteSync)
+            lock(followerSync)
             {
                 this.CheckTerm(request.Term);
 
@@ -37,11 +37,11 @@ namespace RaRaft
             }
         }
 
-        object appendSync = new object();
+
 
         public AppendResponse Append(AppendRequest<T> request)
         {
-            lock(appendSync)
+            lock(followerSync)
             {
                 this.CheckTerm(request.Term);
                 ResetElectionTimeout();
@@ -69,8 +69,7 @@ namespace RaRaft
 
                 if (request.Entries.Any())
                 {
-                    this.Log.Append(request.Entries);
-                    this.CommitIndex = request.Entries.Select(x => x.Index).Max();
+                    this.CommitIndex = this.Log.Append(request.Entries);
                 }
 
                 var nextAppliedIndex = Math.Min(request.LeaderCommitIndex, this.CommitIndex);
@@ -103,8 +102,11 @@ namespace RaRaft
 
         void EndOfElectionTimeout(object _)
         {
-            ClearElectionTimeout();
-            StartLeaderElection();
+            lock(followerSync)
+            {
+                ClearElectionTimeout();
+                StartLeaderElection();
+            } 
         }
 
 

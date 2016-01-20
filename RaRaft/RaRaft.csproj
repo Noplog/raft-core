@@ -48,7 +48,7 @@
     <Compile Include="NodeCandidate.cs" />
     <Compile Include="NodeFollower.cs" />
     <Compile Include="NodeLeader.cs" />
-    <Compile Include="NodeReference.cs" />
+    <Compile Include="INodeReference.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

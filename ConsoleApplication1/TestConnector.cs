@@ -10,11 +10,11 @@ namespace ConsoleApplication1
     /// <summary>
     /// Use this test connector to connect together nodes in the same process for testing
     /// </summary>
-    public class TestConnector : INodeReference<TestMessage>
+    public class TestConnector<T> : INodeReference<T>
     {
         const int NETWORK_DELAY = 10;
 
-        public Node<TestMessage> Node { get; private set; }
+        public Node<T> Node { get; private set; }
 
         public string Name
         {
@@ -24,7 +24,7 @@ namespace ConsoleApplication1
             }
         }
 
-        public TestConnector(Node<TestMessage> node)
+        public TestConnector(Node<T> node)
         {
             this.Node = node;
         }
@@ -38,15 +38,10 @@ namespace ConsoleApplication1
             return result;
         }
 
-        public async Task<AppendResponse> Append(AppendRequest<TestMessage> request)
+        public async Task<AppendResponse> Append(AppendRequest<T> request)
         {
             await Task.Delay(NETWORK_DELAY);
-           /* if (request.Entries.Any())
-            {
-                Console.WriteLine($"T{request.Term} {request.Leader} -> {this.Node.Name} = {request.PreviousLogTerm}.{request.PreviousLogIndex}");
-            }*/
             var result = this.Node.Append(request);
-            //Console.WriteLine($"T{request.Term} {request.Leader} -> {this.Node.Name} = {result.Success}");
             await Task.Delay(NETWORK_DELAY);
             return result;
         }

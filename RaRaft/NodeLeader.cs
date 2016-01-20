@@ -10,25 +10,30 @@ namespace RaRaft
     public partial class Node<T>
     {
         Timer heartbeatTimer = null;
+        object leaderSync = new object();
 
         void StartLeadership()
         {
-            this.State = NodeState.Leader;
-            this.CurrentLeader = this.Name;
-            Console.WriteLine($"{this.Name} is elected leader");
-            this.MatchIndex.Clear();
-            this.NextIndex.Clear();
-            foreach (var node in this.Nodes)
+            lock(leaderSync)
             {
-                this.MatchIndex.Add(node.Name, 0);
-                this.NextIndex.Add(node.Name, this.LastApplied + 1);
+                this.State = NodeState.Leader;
+                this.CurrentLeader = this.Name;
+                Console.WriteLine($"{this.Name} is elected leader");
+                this.MatchIndex.Clear();
+                this.NextIndex.Clear();
+                foreach (var node in this.Nodes)
+                {
+                    this.MatchIndex.Add(node.Name, 0);
+                    this.NextIndex.Add(node.Name, this.LastApplied + 1);
+                }
+
+                // start the heartbeat timer
+                SendAppend();
             }
-            
-            // start the heartbeat timer
-            SendAppend();
         }
 
-        private Task<bool> SendAppend()
+        // not thread safe
+        Task<bool> SendAppend()
         {
             ResetHeartbeat();
             var tcs = new TaskCompletionSource<bool>();
@@ -115,25 +120,38 @@ namespace RaRaft
 
         void SendHeartbeat(object _)
         {
-            this.SendAppend();
+            lock(leaderSync)
+            {
+                this.SendAppend().ContinueWith(x => { });
+            }
         }
+
+        object writeToStorageSync = new object();
 
         public async Task<bool> Write(params T[] entries)
         {
             if (this.State != NodeState.Leader) throw new ApplicationException("The node is not the leader");
+            Task<bool> appendResult = null;
 
-            var logEntries = entries.Select(x =>
+            lock(leaderSync)
             {
-                Interlocked.Increment(ref this.CommitIndex);
-                return new LogEntry<T>(this.CurrentTerm, this.CommitIndex, x);
-            }).ToArray();
+                var logEntries = entries.Select(x =>
+                {
+                    Interlocked.Increment(ref this.CommitIndex);
+                    return new LogEntry<T>(this.CurrentTerm, this.CommitIndex, x);
+                }).ToArray();
 
-            this.Log.Append(logEntries);
-            
-            var success = await SendAppend();
+                this.Log.Append(logEntries);
+                appendResult = SendAppend();
+            }
+
+            var success = await appendResult; 
             if (success)
             {
-                WriteToDurableStorage(entries);
+                lock (writeToStorageSync)
+                {
+                    WriteToDurableStorage(entries);
+                }
             }
             return success;
         }
