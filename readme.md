@@ -53,7 +53,10 @@ public class HttpConnector : INodeReference<MyMessage>
 Then create your node:
 
 ```c#
-var nodes = new HttpConnection[]{
+// This code sets up http://server1 which is connected to http://server2 and http://server3
+// All three nodes will need setting up in a simliar way 
+
+var connections = new HttpConnection[]{
     new HttpConnector("http://server2"),
     new HttpConnector("http://server3")
 };
@@ -61,7 +64,7 @@ var nodes = new HttpConnection[]{
 var log = new MonotonicLog<MyMessage>(new FileStream("node.log", FileMode.OpenOrCreate));
 
 var node = new Node<MyMessage>(
-    nodes,
+    connections,
     "http://server1",
     log,
     myMessage => { /* write MyMessage to storage */ }
